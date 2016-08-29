@@ -9,24 +9,34 @@
 class AppServiceTest extends PHPUnit_Framework_TestCase
 {
     private $appService;
-
+    
     /**
      * @before
      */
     public function before(){
-        $this->appService = new AppService( new ContactDao() );
+        
+        // Real object
+        //$contactDao = new ContactDao();
+        
+        $contactDao = $this->getMockBuilder(ContactDao::class)->getMock();
+        
+        // mocked
+        $contactDao->method('find')->willReturn( new Contact ('Nantes, France', '0606060606'));
+        
+        // expectations
+        $contactDao->expects($this->once())->method('find');
+        $this->appService = new AppService( $contactDao );
     }
 
     /**
      * @test
      */
-    public function should_add_a_new_contact (){
-        $this->assertTrue( count(Db::$contacts) == 0);
-        $this->appService->addContact ( new Contact( "Nantes, France", "0604050607" ) );
-
-        $this->assertTrue( count(Db::$contacts) == 1);
-        $contact = $this->appService->findContactByAddressAndPhone ( "Nantes, France", "0604050607" );
-        $this->assertNotNull($contact);
+    public function shoud_ensure_the_mock_is_well_done (){
+        $contact = $this->appService->findContactByAddressAndPhone ( 'Nantes, France', '0606060606' );
+        
+        $this->assertNotNull ( $contact );
+        $this->assertEquals( 'Nantes, France', $contact->getAddress());
+        $this->assertEquals( '0606060606', $contact->getPhone());
     }
 
     /**
